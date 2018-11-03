@@ -5,14 +5,14 @@
 # 调度器模块封装
 from six.moves.queue import Queue
 
-class Schedule(object):
+class Scheduler(object):
     """
     1. 缓存请求对象(request),并为下载器提供请求对象，实现请求的调度
     2. 对请求对象进行去重
     """
 
     def __init__(self):
-        self.queue = Queue
+        self.queue = Queue()
 
     def add_request(self,request):
         """添加请求对象"""
