@@ -17,8 +17,8 @@ class Response:
         '''
         self.url = url
         self.headers=headers
-        self.status_code = status_code
         self.body = body
+        self.status_code = status_code
 
 
     def xpath(self,rule):
@@ -27,6 +27,8 @@ class Response:
         :param rule: xpath字符串
         :return: 列表，包含element对象或者
         """
+        # print(type(self.body))
+        # print(self.body)
         html = etree.HTML(self.body)
         return html.xpath(rule)
 

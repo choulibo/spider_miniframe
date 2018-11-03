@@ -11,7 +11,7 @@ class Spider:
     '''完成对spider的封装'''
     # start_url = "http://www.baidu.com"  #爬虫最开启请求的url地址
 
-    start_url = []  # 默认初始请求地址
+    start_urls = []  # 默认初始请求地址
 
     # def start_requests(self):
     #     '''
@@ -22,7 +22,7 @@ class Spider:
 
     def start_request(self):
         """构建初始请求对象并返回"""
-        for url in self.start_url:
+        for url in self.start_urls:
             yield Request(url)
 
     def parse(self, response):

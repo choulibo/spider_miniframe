@@ -13,7 +13,7 @@ class DownloaderMiddleware:
         :param request: 请求对象
         :return: 请求
         '''
-        print("下载器中间件：process_request")
+        # print("下载器中间件：process_request")
         return request
 
     def process_response(self,response):
@@ -22,5 +22,5 @@ class DownloaderMiddleware:
         :param response: 响应对象
         :return: respone
         '''
-        print("下载器中间件：process_response")
+        # print("下载器中间件：process_response")
         return response
