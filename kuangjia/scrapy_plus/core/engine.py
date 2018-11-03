@@ -20,11 +20,11 @@ class Engine(object):
     2.依次调用其他组件对外提供的接口，实现整个框架的运作(驱动)
     """
 
-    def __init__(self, spiders):  # 接收外部传入的爬虫对象
+    def __init__(self, spiders,pipelines=[]):  # 接收外部传入的爬虫对象
         self.spiders = spiders  # 爬虫对象
         self.scheduler = Scheduler()  # 初始化调度器对象
         self.downloader = Downloader()  # 初始化下载器对象
-        self.pipeline = Pipeline()  # 初始化管道对象
+        self.pipelines = pipelines  # 管道对象
 
         self.spider_mid = SpiderMiddleware()
         self.downloader_mid = DownloaderMiddleware()
@@ -104,7 +104,8 @@ class Engine(object):
                 self.total_request_nums += 1
             # 7如果不是，调用pipeline的process_item方法处理结果
             else:
-                self.pipeline.process_item(result)
+                for pipeline in self.pipelines:
+                    result = pipeline.process_item(result,spider)
         # 响应加1
         self.total_response_nums += 1
 
