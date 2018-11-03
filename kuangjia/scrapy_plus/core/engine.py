@@ -71,14 +71,21 @@ class Engine(object):
         # 6. 调用下载器的get_response方法，获取响应
         response = self.downloader.get_response(request)
 
+        # 将request的meta值传给response的meta
+        response.meta = request.meta
+
         # 7. response对象经过下载器中间件的process_response进行处理
         response = self.downloader_mid.process_response(response)
 
         # 8. response对象经过下爬虫中间件的process_response进行处理
         response = self.spider_mid.process_response(response)
 
+        # 获取request对象响应的parse方法
+        parse = getattr(self.spider,request.parse)
+
+
         # 9. 调用爬虫的parse方法，处理响应
-        for result in self.spider.parse(response):
+        for result in parse(response):
             # 判断结果类型，如果是request，重新调用调度器的add_request方法
             if isinstance(result,Request):
                 # 在解析函数得到request对象之后，使用process_request进行处理

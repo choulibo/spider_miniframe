@@ -13,7 +13,7 @@ class SpiderMiddleware:
         :param request: 请求对象
         :return: 请求
         '''
-        print("爬虫中间件：process_request")
+        # print("爬虫中间件：process_request")
         return request
 
     def process_response(self,response):
@@ -22,5 +22,5 @@ class SpiderMiddleware:
         :param response: 响应对象
         :return: respone
         '''
-        print("爬虫中间件：process_response")
+        # print("爬虫中间件：process_response")
         return response

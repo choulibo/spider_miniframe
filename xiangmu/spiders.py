@@ -40,4 +40,11 @@ class QiubaiSpider(Spider):
             item["href"] = urllib.parse.urljoin(response.url,div.xpath("./a/@href")[0])
             # print(item)
             yield Item(item)
-            # yield Request(item["href"], parse="parse_detail", meta={"item": item})
+            yield Request(item["href"], parse="parse_detail", meta={"item": item})
+
+
+    def parse_detail(self,response):
+        """详情页响应函数"""
+        item = response.meta["item"]
+        item["stats_vote"] = response.xpath("//span[@class='stats-vote']/i/text()")[0]
+        yield Item(item)
