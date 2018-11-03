@@ -5,10 +5,12 @@
 # project_dir/main.py
 from scrapy_plus.core.engine import Engine  # 导入引擎
 
-from spiders import BaiduSpider,QiubaiSpider
+from spiders.baidu import BaiduSpider
+from spiders.qiubai import QiubaiSpider
 
 if __name__ == '__main__':
-    # baidu = BaiduSpider()  # 实例化爬虫对象
+    baidu = BaiduSpider()  # 实例化爬虫对象
     qiubai = QiubaiSpider()
-    engine = Engine(qiubai)  # 传入爬虫对象
+    spiders = {baidu.name:baidu,qiubai.name:qiubai}
+    engine = Engine(spiders)  # 传入爬虫对象
     engine.start()  # 启动引擎
