@@ -15,15 +15,18 @@ class QiubaiSpider(Spider):
         """发送start_urls中url地址的请求"""
 
         url_temp = "https://www.qiushibaike.com/8hr/page/{}/"
+        # yield Request(url_temp)
         for i in range(1,14):
             yield Request(url_temp.format(i))
 
     def parse(self, response):
         """提取页面的数据"""
 
+
         # 先分组，在提取数据
 
         div_list = response.xpath("//div[@id='content-left']/div")
+        # print(len(div_list))
         for div in div_list[:1]:
             item = {}
             item["name"] = div.xpath(".//h2/text()")[0].strip()
