@@ -21,10 +21,7 @@ class QiubaiSpider(Spider):
 
     def parse(self, response):
         """提取页面的数据"""
-
-
         # 先分组，在提取数据
-
         div_list = response.xpath("//div[@id='content-left']/div")
         # print(len(div_list))
         for div in div_list[:1]:

@@ -19,5 +19,5 @@ if __name__ == '__main__':
     pipelines = [BaiduPipelines(),QIubaiPipelines()]
     spider_mids = [TestSpiderMiddleware1(),TestSpiderMiddleware2()]
     downloader_mids = [TestDownloaderMiddleware1(),TestDownloaderMiddleware2()]
-    engine = Engine(spiders,pipelines = pipelines,spider_mids = spider_mids,downloader_mids = downloader_mids)  # 传入爬虫对象
+    engine = Engine(pipelines = pipelines,spider_mids = spider_mids,downloader_mids = downloader_mids)  # 传入爬虫对象
     engine.start()  # 启动引擎

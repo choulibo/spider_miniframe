@@ -4,7 +4,7 @@
 
 # 引擎组件的封装
 from datetime import datetime
-
+import importlib
 from scrapy_plus.http.request import Request
 
 from scrapy_plus.core.schedule import Scheduler
@@ -13,6 +13,11 @@ from scrapy_plus.core.pipeline import Pipeline
 from scrapy_plus.middlewares.spidermiddleware import SpiderMiddleware
 from scrapy_plus.middlewares.downloadermiddleware import DownloaderMiddleware
 import time
+from scrapy_plus.conf.settings import SPIDERS, PIPELINES, SPIDER_MIDDLEWARES, DOWNLOADER_MIDDLEWARES
+
+
+
+
 
 class Engine(object):
     """
@@ -20,30 +25,55 @@ class Engine(object):
     2.依次调用其他组件对外提供的接口，实现整个框架的运作(驱动)
     """
 
-    def __init__(self, spiders,pipelines=[],spider_mids = [],downloader_mids = []):  # 接收外部传入的爬虫对象
+    def __init__(self, pipelines=[], spider_mids=[], downloader_mids=[]):  # 接收外部传入的爬虫对象
+        """实例化其他的组件，在引擎中通过调用组件的方法实现其功能"""
+        # print(spiders)
         self.scheduler = Scheduler()  # 初始化调度器对象
         self.downloader = Downloader()  # 初始化下载器对象
-        self.spiders = spiders  # 爬虫对象 字典
-        self.pipelines = pipelines  # 管道对象 列表
-        self.spider_mids = spider_mids  # 列表
-        self.downloader_mids = downloader_mids  # 列表
+        self.spiders = self._auto_import_instances(SPIDERS,is_spider=True)  # 爬虫对象 字典
+        self.pipelines = self._auto_import_instances(PIPELINES) # 管道对象 列表
+        self.spider_mids = self._auto_import_instances(SPIDER_MIDDLEWARES)  # 列表
+        self.downloader_mids = self._auto_import_instances(DOWNLOADER_MIDDLEWARES)  # 列表
         self.total_request_nums = 0
         self.total_response_nums = 0
+
+    def _auto_import_instances(self, path,is_spider=False):
+        """
+        实现模块的动态导入，传入模块路径列表，返回类的实例
+        :param self:
+        :param path:包含模块位置字符串的列表
+        :return:{“name”:spider}/[pipeline等]
+        """
+        if is_spider:
+            instances = {}
+        else:
+            instances = []
+        for p in path:
+            module_name = p.rsplit(".", 1)[0]  # 获取模块路径的名字
+            cls_name = p.rsplit(".", 1)[-1]  # 获取类名
+            module = importlib.import_module(module_name)  # 导入模块
+            cls = getattr(module, cls_name)  # 获取module下的类
+            if is_spider:
+                instances[cls().name] = cls()
+            else:
+                instances.append(cls())
+        print(instances)
+        return instances
 
     def start(self):
         """启动整个引擎"""
         start_time = datetime.now()
-        print("爬虫启动：",start_time)
+        print("爬虫启动：", start_time)
         self._start_engine()
         endtime = datetime.now()
-        print("爬虫结束：",endtime)
-        print(endtime-start_time)
-        print("请求数量：",self.total_request_nums)
-        print("响应数量：",self.total_response_nums)
+        print("爬虫结束：", endtime)
+        print(endtime - start_time)
+        print("请求数量：", self.total_request_nums)
+        print("响应数量：", self.total_response_nums)
 
     def _start_request(self):
         """初始化请求，调用爬虫的start_request方法，把所有等等请求添加到调度器"""
-        for spider_name,spider in self.spiders.items():
+        for spider_name, spider in self.spiders.items():
             for start_request in spider.start_request():
 
                 # 1.对start_request进过爬虫中间件进行处理
@@ -58,7 +88,6 @@ class Engine(object):
 
                 # 3.请求数加1
                 self.total_request_nums += 1
-
 
     def _execute_request_response_item(self):
 
@@ -91,13 +120,12 @@ class Engine(object):
         spider = self.spiders[request.spider_name]
 
         # 获取request对象响应的parse方法
-        parse = getattr(spider,request.parse)
-
+        parse = getattr(spider, request.parse)
 
         # 9. 调用爬虫的parse方法，处理响应
         for result in parse(response):
             # 判断结果类型，如果是request，重新调用调度器的add_request方法
-            if isinstance(result,Request):
+            if isinstance(result, Request):
                 # 在解析函数得到request对象之后，使用process_request进行处理
                 for spider_mid in self.spider_mids:
                     result = spider_mid.process_request(result)
@@ -109,7 +137,7 @@ class Engine(object):
             # 7如果不是，调用pipeline的process_item方法处理结果
             else:
                 for pipeline in self.pipelines:
-                    result = pipeline.process_item(result,spider)
+                    result = pipeline.process_item(result, spider)
         # 响应加1
         self.total_response_nums += 1
 
@@ -117,7 +145,7 @@ class Engine(object):
 
         """具体实现引擎的细节"""
 
-        #"""依次调用其他组件对外提供的接口，实现整个框架的运作(驱动)"""
+        # """依次调用其他组件对外提供的接口，实现整个框架的运作(驱动)"""
         #
         # # 1. 调用爬虫的start_request方法，获取request对象
         # start_request = self.spider.start_requests()
@@ -156,5 +184,5 @@ class Engine(object):
 
             self._execute_request_response_item()
 
-            if self.total_response_nums>=self.total_request_nums:
+            if self.total_response_nums >= self.total_request_nums:
                 break
