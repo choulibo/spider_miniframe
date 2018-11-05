@@ -9,7 +9,7 @@ import urllib.parse
 # 继承框架的爬虫基类
 class BaiduSpider(Spider):
     name = "baidu"
-    start_urls = ['http://www.baidu.com']* 5  # 设置初始请求url
+    start_urls = ['http://www.baidu.com']* 3  # 设置初始请求url
 
     def parse(self, response):
         yield Item(response.body[:10])

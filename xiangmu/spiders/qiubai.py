@@ -41,5 +41,6 @@ class QiubaiSpider(Spider):
     def parse_detail(self,response):
         """详情页响应函数"""
         item = response.meta["item"]
-        item["stats_vote"] = response.xpath("//span[@class='stats-vote']/i/text()")[0]
+        item["stats_vote"] = response.xpath("//span[@class='stats-vote']/i/text()")
+        item["stats_vote"] = item["stats_vote"][0] if len(item["stats_vote"])>0 else None
         yield Item(item)

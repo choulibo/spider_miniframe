@@ -24,4 +24,6 @@ DOWNLOADER_MIDDLEWARES = [
     "downloader_middlewares.TestDownloaderMiddleware1"
 ]
 
-COCOURRENT_REQUEST  = 5
+COCOURRENT_REQUEST  = 1
+
+ASYNC_TYPE = "courtine"  # thread  异步方式

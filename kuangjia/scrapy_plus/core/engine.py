@@ -5,18 +5,26 @@
 # 引擎组件的封装
 from datetime import datetime
 import importlib
-from scrapy_plus.http.request import Request
+from scrapy_plus.conf.settings import ASYNC_TYPE
 
+if ASYNC_TYPE == 'thread':
+    from multiprocessing.dummy import Pool
+elif ASYNC_TYPE == 'courtine':
+    from gevent.pool import Pool
+    from gevent.monkey import patch_all
+
+    patch_all()
+else:
+    raise Exception("不支持的异步方式")
+
+from scrapy_plus.http.request import Request
 from scrapy_plus.core.schedule import Scheduler
 from scrapy_plus.core.downloader import Downloader
 from scrapy_plus.core.pipeline import Pipeline
 from scrapy_plus.middlewares.spidermiddleware import SpiderMiddleware
 from scrapy_plus.middlewares.downloadermiddleware import DownloaderMiddleware
 import time
-from scrapy_plus.conf.settings import SPIDERS, PIPELINES, SPIDER_MIDDLEWARES, DOWNLOADER_MIDDLEWARES,COCOURRENT_REQUEST
-from multiprocessing.dummy import Pool
-
-
+from scrapy_plus.conf.settings import SPIDERS, PIPELINES, SPIDER_MIDDLEWARES, DOWNLOADER_MIDDLEWARES, COCOURRENT_REQUEST
 
 
 class Engine(object):
@@ -30,8 +38,8 @@ class Engine(object):
         # print(spiders)
         self.scheduler = Scheduler()  # 初始化调度器对象
         self.downloader = Downloader()  # 初始化下载器对象
-        self.spiders = self._auto_import_instances(SPIDERS,is_spider=True)  # 爬虫对象 字典
-        self.pipelines = self._auto_import_instances(PIPELINES) # 管道对象 列表
+        self.spiders = self._auto_import_instances(SPIDERS, is_spider=True)  # 爬虫对象 字典
+        self.pipelines = self._auto_import_instances(PIPELINES)  # 管道对象 列表
         self.spider_mids = self._auto_import_instances(SPIDER_MIDDLEWARES)  # 列表
         self.downloader_mids = self._auto_import_instances(DOWNLOADER_MIDDLEWARES)  # 列表
         self.total_request_nums = 0
@@ -39,7 +47,7 @@ class Engine(object):
         self.pool = Pool()  # 实例化线程池对象
         self.is_running = False  # 判断程序是否执行标志
 
-    def _auto_import_instances(self, path,is_spider=False):
+    def _auto_import_instances(self, path, is_spider=False):
         """
         实现模块的动态导入，传入模块路径列表，返回类的实例
         :param self:
@@ -72,7 +80,7 @@ class Engine(object):
         print(endtime - start_time)
         print("请求数量：", self.total_request_nums)
         print("响应数量：", self.total_response_nums)
-        print("重复数量：",self.scheduler.repeat_request_nums)
+        print("重复数量：", self.scheduler.repeat_request_nums)
 
     def _start_request(self):
         """初始化请求，调用爬虫的start_request方法，把所有等等请求添加到调度器"""
@@ -144,7 +152,7 @@ class Engine(object):
         # 响应加1
         self.total_response_nums += 1
 
-    def _callback(self,temp):
+    def _callback(self, temp):
         """执行新的请求回调函数，实现循环"""
         if self.is_running is True:
             self.pool.apply_async(self._execute_request_response_item, callback=self._callback)
@@ -181,11 +189,10 @@ class Engine(object):
         # # 7如果不是，调用pipeline的process_item方法处理结果
         # else:
         #     self.pipeline.process_item(result)
-        self.is_running  = True  # 启动引擎，设置状态为True
+        self.is_running = True  # 启动引擎，设置状态为True
         self.pool.apply_async(self._start_request)  # 使用异步,使用子线程
         for i in range(COCOURRENT_REQUEST):
-            self.pool.apply_async(self._execute_request_response_item,callback=self._callback)  # 使用子线程
-
+            self.pool.apply_async(self._execute_request_response_item, callback=self._callback)  # 使用子线程
 
         self._start_request()
 
