@@ -25,7 +25,7 @@ class Engine(object):
     2.依次调用其他组件对外提供的接口，实现整个框架的运作(驱动)
     """
 
-    def __init__(self, pipelines=[], spider_mids=[], downloader_mids=[]):  # 接收外部传入的爬虫对象
+    def __init__(self):  # 接收外部传入的爬虫对象
         """实例化其他的组件，在引擎中通过调用组件的方法实现其功能"""
         # print(spiders)
         self.scheduler = Scheduler()  # 初始化调度器对象
@@ -70,6 +70,7 @@ class Engine(object):
         print(endtime - start_time)
         print("请求数量：", self.total_request_nums)
         print("响应数量：", self.total_response_nums)
+        print("重复数量：",self.scheduler.repeat_request_nums)
 
     def _start_request(self):
         """初始化请求，调用爬虫的start_request方法，把所有等等请求添加到调度器"""
@@ -184,5 +185,5 @@ class Engine(object):
 
             self._execute_request_response_item()
 
-            if self.total_response_nums >= self.total_request_nums:
+            if self.total_response_nums +self.scheduler.repeat_request_nums >= self.total_request_nums:
                 break

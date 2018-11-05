@@ -13,11 +13,11 @@ from downloader_middlewares import TestDownloaderMiddleware1,TestDownloaderMiddl
 
 
 if __name__ == '__main__':
-    baidu = BaiduSpider()  # 实例化爬虫对象
-    qiubai = QiubaiSpider()
-    spiders = {baidu.name:baidu,qiubai.name:qiubai}
-    pipelines = [BaiduPipelines(),QIubaiPipelines()]
-    spider_mids = [TestSpiderMiddleware1(),TestSpiderMiddleware2()]
-    downloader_mids = [TestDownloaderMiddleware1(),TestDownloaderMiddleware2()]
-    engine = Engine(pipelines = pipelines,spider_mids = spider_mids,downloader_mids = downloader_mids)  # 传入爬虫对象
+    # baidu = BaiduSpider()  # 实例化爬虫对象
+    # qiubai = QiubaiSpider()
+    # spiders = {baidu.name:baidu,qiubai.name:qiubai}
+    # pipelines = [BaiduPipelines(),QIubaiPipelines()]
+    # spider_mids = [TestSpiderMiddleware1(),TestSpiderMiddleware2()]
+    # downloader_mids = [TestDownloaderMiddleware1(),TestDownloaderMiddleware2()]
+    engine = Engine()  # 传入爬虫对象
     engine.start()  # 启动引擎
