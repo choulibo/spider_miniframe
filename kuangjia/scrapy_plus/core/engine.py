@@ -13,8 +13,8 @@ from scrapy_plus.core.pipeline import Pipeline
 from scrapy_plus.middlewares.spidermiddleware import SpiderMiddleware
 from scrapy_plus.middlewares.downloadermiddleware import DownloaderMiddleware
 import time
-from scrapy_plus.conf.settings import SPIDERS, PIPELINES, SPIDER_MIDDLEWARES, DOWNLOADER_MIDDLEWARES
-
+from scrapy_plus.conf.settings import SPIDERS, PIPELINES, SPIDER_MIDDLEWARES, DOWNLOADER_MIDDLEWARES,COCOURRENT_REQUEST
+from multiprocessing.dummy import Pool
 
 
 
@@ -36,6 +36,8 @@ class Engine(object):
         self.downloader_mids = self._auto_import_instances(DOWNLOADER_MIDDLEWARES)  # 列表
         self.total_request_nums = 0
         self.total_response_nums = 0
+        self.pool = Pool()  # 实例化线程池对象
+        self.is_running = False  # 判断程序是否执行标志
 
     def _auto_import_instances(self, path,is_spider=False):
         """
@@ -142,11 +144,13 @@ class Engine(object):
         # 响应加1
         self.total_response_nums += 1
 
+    def _callback(self,temp):
+        """执行新的请求回调函数，实现循环"""
+        if self.is_running is True:
+            self.pool.apply_async(self._execute_request_response_item, callback=self._callback)
+
     def _start_engine(self):
-
-        """具体实现引擎的细节"""
-
-        # """依次调用其他组件对外提供的接口，实现整个框架的运作(驱动)"""
+        """依次调用其他组件对外提供的接口，实现整个框架的运作(驱动)"""
         #
         # # 1. 调用爬虫的start_request方法，获取request对象
         # start_request = self.spider.start_requests()
@@ -177,13 +181,24 @@ class Engine(object):
         # # 7如果不是，调用pipeline的process_item方法处理结果
         # else:
         #     self.pipeline.process_item(result)
+        self.is_running  = True  # 启动引擎，设置状态为True
+        self.pool.apply_async(self._start_request)  # 使用异步,使用子线程
+        for i in range(COCOURRENT_REQUEST):
+            self.pool.apply_async(self._execute_request_response_item,callback=self._callback)  # 使用子线程
+
 
         self._start_request()
 
+        # 设置循环，处理多个请求,阻塞，等待子线程结束
         while True:
-            time.sleep(0.001)
+            time.sleep(0.0001)
 
-            self._execute_request_response_item()
+            # self._execute_request_response_item()
 
-            if self.total_response_nums +self.scheduler.repeat_request_nums >= self.total_request_nums:
+            # 设置退出条件：当请求数和响应数相等时，退出循环
+            # 因为是异步，需要增加判断条件，请求书不能是0
+            # if self.total_response_nums +self.scheduler.repeat_request_nums >= self.total_request_nums:
+            # if self.total_response_number >= self.scheduler.total_request_number and self.scheduler.total_request_number != 0:
+            if self.total_response_nums >= self.scheduler.total_request_number and self.scheduler.total_request_number != 0:
+                self.running = False  # 满足循环退出条件后，设置运行状态为False
                 break

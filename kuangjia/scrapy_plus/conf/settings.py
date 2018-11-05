@@ -23,3 +23,5 @@ SPIDER_MIDDLEWARES = [
 DOWNLOADER_MIDDLEWARES = [
     "downloader_middlewares.TestDownloaderMiddleware1"
 ]
+
+COCOURRENT_REQUEST  = 5
